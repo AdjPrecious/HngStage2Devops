@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir --upgrade pip==25.3.0  \
     && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 
-FROM python:3.11-slim AS final
+FROM python:3.11-alpine AS final
 
 RUN addgroup --system appgroup \
     && adduser --system --ingroup appgroup --no-create-home appuser

@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  contents: read
+  security-events: write
+
 env:
   REGISTRY: localhost:5000
 
@@ -186,6 +190,7 @@ jobs:
           output: trivy-api.sarif
           exit-code: "1"
           severity: CRITICAL
+          skip-version-check: true
 
       - name: Scan worker image
         uses: aquasecurity/trivy-action@master
@@ -204,6 +209,7 @@ jobs:
           output: trivy-frontend.sarif
           exit-code: "1"
           severity: CRITICAL
+          skip-version-check: true
 
       - name: Upload SARIF results
         if: always()
