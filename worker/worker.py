@@ -1,10 +1,9 @@
 import logging
-import sys
-
-import redis
-import time
 import os
 import signal
+import time
+
+import redis
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,21 +15,24 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)
 
 r = redis.Redis(
-    host = REDIS_HOST,
-    port = REDIS_PORT,
-    password = REDIS_PASSWORD,
-    decode_responses = True
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD,
+    decode_responses=True,
 )
 
 running = True
+
 
 def handle_shutdown(signum, frame):
     global running
     logging.info("Shutdown signal received, stopping worker...")
     running = False
 
+
 signal.signal(signal.SIGTERM, handle_shutdown)
 signal.signal(signal.SIGINT, handle_shutdown)
+
 
 def process_job(job_id: str):
     logging.info(f"Processing job {job_id}")
@@ -41,6 +43,7 @@ def process_job(job_id: str):
     logging.info(f"Done: {job_id}")
     print(f"Done: {job_id}")
 
+
 logging.info("Worker started, waiting for jobs...")
 while running:
     try:
@@ -49,13 +52,9 @@ while running:
             _, job_id = job
             process_job(job_id)
     except redis.exceptions.ConnectionError as e:
-        logging.error(f"Redis connection error: {e}. Retrying in 5 seconds...   ")
+        logging.error(f"Redis connection error: {e}. Retrying in 5 seconds...")
         time.sleep(5)
-
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
 
-
 logging.info("Worker shut down cleanly.")
-
-sys.exit(0)

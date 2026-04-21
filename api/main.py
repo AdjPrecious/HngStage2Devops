@@ -1,10 +1,12 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import redis
-import uuid
 import os
+import uuid
 
-app = FastAPI()
+import redis
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="Job Processing API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,27 +20,29 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)
 
 r = redis.Redis(
-    host = REDIS_HOST,
-    port = REDIS_PORT,
-    password = REDIS_PASSWORD,
-    decode_responses = True
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD,
+    decode_responses=True,
 )
+
 
 @app.get("/health")
 def health():
     try:
         r.ping()
         return {"status": "ok"}
-    except Exception:
+    except redis.exceptions.ConnectionError:
         raise HTTPException(status_code=503, detail="Redis unavailable")
+
 
 @app.post("/jobs")
 def create_job():
-
     job_id = str(uuid.uuid4())
     r.lpush("jobs", job_id)
     r.hset(f"job:{job_id}", "status", "queued")
     return {"job_id": job_id}
+
 
 @app.get("/jobs/{job_id}")
 def get_job(job_id: str):

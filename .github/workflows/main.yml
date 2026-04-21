@@ -42,7 +42,8 @@ jobs:
         run: npm install -g eslint
 
       - name: Lint JavaScript
-        run: eslint frontend/app.js --env node --env es2020 --parser-options=ecmaVersion:2020
+        working-directory: frontend
+        run: eslint app.js --config eslint.config.cjs
 
       - name: Install hadolint
         run: |
