@@ -190,7 +190,8 @@ jobs:
           output: trivy-api.sarif
           exit-code: "1"
           severity: CRITICAL
-          skip-version-check: true
+          vuln-type: os
+          scanners: vuln
 
       - name: Scan worker image
         uses: aquasecurity/trivy-action@master
@@ -200,6 +201,8 @@ jobs:
           output: trivy-worker.sarif
           exit-code: "1"
           severity: CRITICAL
+          vuln-type: os
+          scanners: vuln
 
       - name: Scan frontend image
         uses: aquasecurity/trivy-action@master
@@ -209,13 +212,30 @@ jobs:
           output: trivy-frontend.sarif
           exit-code: "1"
           severity: CRITICAL
-          skip-version-check: true
+          vuln-type: os
+          scanners: vuln
 
       - name: Upload SARIF results
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: .
+          sarif_file: trivy-api.sarif
+          category: trivy-api
+      - name: Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-worker.sarif
+          category: trivy-worker
+
+      - name: Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-frontend.sarif
+          category: trivy-frontend
+
+      
 
   # ─────────────────────────────────────────────
   # 5. INTEGRATION TEST
