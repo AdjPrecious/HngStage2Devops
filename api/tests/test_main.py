@@ -60,3 +60,4 @@ def test_create_job_uses_correct_queue_key(client, mock_redis):
     client.post("/jobs")
     call_args = mock_redis.lpush.call_args
     assert call_args[0][0] == "jobs"
+    
