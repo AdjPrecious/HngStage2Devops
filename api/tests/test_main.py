@@ -12,6 +12,7 @@ def mock_redis():
 @pytest.fixture
 def client(mock_redis):
     from main import app
+
     return TestClient(app)
 
 
@@ -24,6 +25,7 @@ def test_health_ok(client, mock_redis):
 
 def test_health_redis_down(client, mock_redis):
     import redis as redis_lib
+
     mock_redis.ping.side_effect = redis_lib.exceptions.ConnectionError("down")
     response = client.get("/health")
     assert response.status_code == 503
@@ -60,4 +62,3 @@ def test_create_job_uses_correct_queue_key(client, mock_redis):
     client.post("/jobs")
     call_args = mock_redis.lpush.call_args
     assert call_args[0][0] == "jobs"
-    
