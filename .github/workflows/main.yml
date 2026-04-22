@@ -348,15 +348,19 @@ jobs:
           name: docker-images
           path: /tmp/
 
-      - name: Load images
+      - name: Load images and retag
         run: |
           docker load < /tmp/api.tar.gz
           docker load < /tmp/worker.tar.gz
           docker load < /tmp/frontend.tar.gz
+          docker tag $REGISTRY/api:latest     stage2-api:latest
+          docker tag $REGISTRY/worker:latest  stage2-worker:latest
+          docker tag $REGISTRY/frontend:latest stage2-frontend:latest
+
 
       - name: Rolling deploy
         env:
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD || 'supersecretpassword123' }}
           FRONTEND_PORT: ${{ secrets.FRONTEND_PORT || '3000' }}
         run: |
           set -e
@@ -364,7 +368,33 @@ jobs:
           echo "REDIS_PASSWORD=$REDIS_PASSWORD" > .env
           echo "FRONTEND_PORT=$FRONTEND_PORT"  >> .env
 
-          # Bring up new containers alongside old ones
+          # Write override to use pre-built images
+          echo 'services:' > docker-compose.override.yml
+          echo '  api:' >> docker-compose.override.yml
+          echo '    image: stage2-api:latest' >> docker-compose.override.yml
+          echo '    build: null' >> docker-compose.override.yml
+          echo '  worker:' >> docker-compose.override.yml
+          echo '    image: stage2-worker:latest' >> docker-compose.override.yml
+          echo '    build: null' >> docker-compose.override.yml
+          echo '  frontend:' >> docker-compose.override.yml
+          echo '    image: stage2-frontend:latest' >> docker-compose.override.yml
+          echo '    build: null' >> docker-compose.override.yml
+
+          # Start full stack (redis + all services)
+          docker compose up -d
+
+          # Wait for redis to be healthy first
+          echo "Waiting for Redis..."
+          for i in $(seq 1 12); do
+            if docker compose ps redis | grep -q "healthy"; then
+              echo "Redis is healthy"
+              break
+            fi
+            sleep 5
+          done
+
+
+          # Rolling update — scale api to 2, wait for at least 1 healthy
           docker compose up -d --no-deps --scale api=2 api || true
 
           # Wait up to 60s for new container health check
