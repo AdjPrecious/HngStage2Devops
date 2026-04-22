@@ -264,18 +264,16 @@ jobs:
           echo "FRONTEND_PORT=3000" >> .env
       - name: Override compose to use pre-built images (Python)
         run: |
-           python3 -c "
-           import yaml
-           override = {
-             'services': {
-               'api': {'image': 'stage2-api:latest', 'build': None},
-               'worker': {'image': 'stage2-worker:latest', 'build': None},
-               'frontend': {'image': 'stage2-frontend:latest', 'build': None}
-             }
-           }  
-             with open('docker-compose.override.yml', 'w') as f:
-               yaml.dump(override, f) 
-            "      
+           echo 'services:' > docker-compose.override.yml
+           echo '  api:' >> docker-compose.override.yml
+           echo '    image: stage2-api:latest' >> docker-compose.override.yml
+           echo '    build: null' >> docker-compose.override.yml
+           echo '  worker:' >> docker-compose.override.yml
+           echo '    image: stage2-worker:latest' >> docker-compose.override.yml
+           echo '    build: null' >> docker-compose.override.yml
+           echo '  frontend:' >> docker-compose.override.yml
+           echo '    image: stage2-frontend:latest' >> docker-compose.override.yml
+           echo '    build: null' >> docker-compose.override.yml
       - name: Verify files exist
         run: |
           echo "=== workspace files ==="
