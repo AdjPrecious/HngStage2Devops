@@ -1,4 +1,4 @@
-FROM python:3.11-slim AS builder
+FROM python:3.11-alpine AS builder
 
 WORKDIR /build
 
@@ -7,10 +7,10 @@ RUN pip install --no-cache-dir --upgrade pip==25.3.0  \
     && pip install --no-cache-dir --prefix=/install --requirement requirements.txt
 
 
-FROM python:3.11-slim AS final
+FROM python:3.11-alpine AS final
 
-RUN addgroup --system appgroup \
-    && adduser --system --ingroup appgroup --no-create-home appuser
+RUN addgroup -S appgroup \
+    && adduser -S -G appgroup appuser
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ USER appuser
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:8000/health || exit 1
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

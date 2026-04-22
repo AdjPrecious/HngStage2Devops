@@ -1,5 +1,5 @@
 
-FROM python:3.11-slim AS builder
+FROM python:3.11-alpine AS builder
 
 WORKDIR /build
 
@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir --upgrade pip==25.3.0  \
 
 FROM python:3.11-alpine AS final
 
-RUN addgroup --system appgroup \
-    && adduser --system --ingroup appgroup --no-create-home appuser
+RUN addgroup -S appgroup \
+    && adduser -S -G appgroup appuser
 
 WORKDIR /app
 
@@ -21,6 +21,6 @@ COPY worker.py .
 USER appuser
 
 HEALTHCHECK --interval=20s --timeout=5s --start-period=15s --retries=3 \
-  CMD python -c "import redis, os; r=redis.Redis(host=os.environ.get('REDIS_HOST','redis'),password=os.environ.get('REDIS_PASSWORD',None)); r.ping()"
+  CMD python3 -c "import redis, os; r=redis.Redis(host=os.environ.get('REDIS_HOST','redis'),password=os.environ.get('REDIS_PASSWORD',None)); r.ping()"
 
 CMD ["python", "worker.py"]
