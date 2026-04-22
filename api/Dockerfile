@@ -10,7 +10,8 @@ RUN pip install --no-cache-dir --upgrade pip==25.3.0  \
 FROM python:3.11-alpine AS final
 
 RUN addgroup -S appgroup \
-    && adduser -S -G appgroup appuser
+    && adduser -S -G appgroup appuser \
+    && apk add --no-cache wget
 
 WORKDIR /app
 
