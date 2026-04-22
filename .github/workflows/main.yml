@@ -265,23 +265,19 @@ jobs:
 
       - name: Create .env for compose
         run: |
-          echo "REDIS_PASSWORD=testpassword123" > .env
-          echo "FRONTEND_PORT=3000"            >> .env
+          echo "REDIS_PASSWORD=supersecretpassword123" > .env
+          echo "FRONTEND_PORT=3000" >> .env
 
       - name: Override compose to use pre-built images
         run: |
-          cat > docker-compose.override.yml << 'EOF'
-          services:
-            api:
-              image: stage2-api:latest
-              build: ~
-            worker:
-              image: stage2-worker:latest
-              build: ~
-            frontend:
-              image: stage2-frontend:latest
-              build: ~
-          EOF
+          printf 'services:\n  api:\n    image: stage2-api:latest\n    build: null\n  worker:\n    image: stage2-worker:latest\n    build: null\n  frontend:\n    image: stage2-frontend:latest\n    build: null\n' > docker-compose.override.yml
+      
+      - name: Verify files exist
+        run: |
+          echo "=== workspace files ==="
+          ls -la
+          echo "=== docker-compose-override.yaml ==="
+          cat docker-compose.override.yml
 
       - name: Start full stack
         run: docker compose up -d
