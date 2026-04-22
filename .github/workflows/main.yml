@@ -267,11 +267,20 @@ jobs:
         run: |
           echo "REDIS_PASSWORD=supersecretpassword123" > .env
           echo "FRONTEND_PORT=3000" >> .env
-
-      - name: Override compose to use pre-built images
+      - name: Override compose to use pre-built images (Python)
         run: |
-          printf 'services:\n  api:\n    image: stage2-api:latest\n    build: null\n  worker:\n    image: stage2-worker:latest\n    build: null\n  frontend:\n    image: stage2-frontend:latest\n    build: null\n' > docker-compose.override.yml
-      
+           python3 -c "
+           import yaml
+           override = {
+             'services': {
+               'api': {'image': 'stage2-api:latest', 'build': None},
+               'worker': {'image': 'stage2-worker:latest', 'build': None},
+               'frontend': {'image': 'stage2-frontend:latest', 'build': None}
+             }
+           }  
+             with open('docker-compose.override.yml', 'w') as f:
+               yaml.dump(override, f) 
+            "      
       - name: Verify files exist
         run: |
           echo "=== workspace files ==="
